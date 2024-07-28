@@ -10,14 +10,44 @@ export default function Home() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    reset,
+    setError,
   } = useForm<TSignUpSchema>({ resolver: zodResolver(signUpSchema) });
 
   const onSubmit = async (data: TSignUpSchema) => {
-    // Mock: submit to server
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const response = await fetch("/api/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const responseData = response.json();
 
-    reset();
+    if (!response.ok) {
+      alert("Submitting form failed");
+      return;
+    }
+
+    if (responseData.errors) {
+      const errors = responseData.errors;
+
+      if (errors.email) {
+        setError("email", { type: "server", message: errors.email });
+      } else if (errors.password) {
+        setError("password", { type: "server", message: errors.password });
+      } else if (errors.confirmPassword) {
+        setError("confirmPassword", {
+          type: "server",
+          message: errors.confirmPassword,
+        });
+      } else {
+        alert("Something went wrong!");
+      }
+    }
   };
 
   return (
