@@ -1,75 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useForm, type FieldValues } from "react-hook-form";
 
 export default function Home() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    getValues,
+  } = useForm();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    if (password !== confirmPassword) {
-      setErrors(["Password and confirm password must match"]);
-      setIsSubmitting(false);
-      return;
-    }
-
-    // submit form to server
+  const onSubmit = async (data: FieldValues) => {
+    // Mock: submit to server
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    setIsSubmitting(false);
+    reset();
   };
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-y-2 w-1/3 mx-auto mt-32"
     >
-      {errors.length > 0 && (
-        <ul>
-          {errors.map((error) => (
-            <li
-              key={error}
-              className="bg-red-100 text-red-500 px-4 py-2 rounded"
-            >
-              {error}
-            </li>
-          ))}
-        </ul>
-      )}
-
       <input
+        {...register("email", { required: "Email is required" })}
         type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
         placeholder="Email"
         className="px-4 py-2 rounded border"
       />
+      {errors.email && (
+        <p className="text-red-500">{`${errors.email.message}`}</p>
+      )}
+
       <input
+        {...register("password", {
+          required: "Password is required",
+          minLength: {
+            value: 10,
+            message: "Password must be at least 10 characters",
+          },
+        })}
         type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
         placeholder="Password"
         className="px-4 py-2 rounded border"
       />
+      {errors.password && (
+        <p className="text-red-500">{`${errors.password.message}`}</p>
+      )}
+
       <input
+        {...register("confirmPassword", {
+          required: "Confirm password is required",
+          validate: (value) =>
+            value === getValues("password") ||
+            "Password and confirm password must be match",
+        })}
         type="password"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        required
         placeholder="Confirm Password"
         className="px-4 py-2 rounded border"
       />
+      {errors.confirmPassword && (
+        <p className="text-red-500">{`${errors.confirmPassword.message}`}</p>
+      )}
+
       <button
         type="submit"
         disabled={isSubmitting}
